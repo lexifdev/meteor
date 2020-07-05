@@ -2,6 +2,11 @@ var Module = module.constructor;
 var cache = require("./cache.js");
 var meteorInstall = require("meteor/modules").meteorInstall;
 
+const dynamicImportSettings = Meteor.settings
+    && Meteor.settings.public
+    && Meteor.settings.public.packages
+    && Meteor.settings.public.packages.dynamicImport;
+
 // Call module.dynamicImport(id) to fetch a module and any/all of its
 // dependencies that have not already been fetched, and evaluate them as
 // soon as they arrive. This runtime API makes it very easy to implement
@@ -138,14 +143,13 @@ function fetchMissing(missingTree) {
 
   let url = fetchURL;
 
-  // Lo and behold!
-  const useDynamicOrigin = Meteor.settings
-      && Meteor.settings.public
-      && Meteor.settings.public.packages
-      && Meteor.settings.public.packages.dynamicImport
-      && Meteor.settings.public.packages.dynamicImport.useDynamicOrigin;
+  const useLocationOrigin = dynamicImportSettings
+      && dynamicImportSettings.useLocationOrigin;
 
-  if (useDynamicOrigin && location && !inIframe()) {
+  const disableLocationOriginIframe = dynamicImportSettings
+      && dynamicImportSettings.disableLocationOriginIframe;
+
+  if (useLocationOrigin && location && !(disableLocationOriginIframe && inIframe())) {
     url = location.origin.concat(url);
   } else {
     url = Meteor.absoluteUrl(url);
